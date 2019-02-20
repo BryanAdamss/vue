@@ -1,11 +1,11 @@
 ## Explanation of Build Files
 
-| | UMD | CommonJS | ES Module |
-| --- | --- | --- | --- |
-| **Full** | vue.js | vue.common.js | vue.esm.js |
-| **Runtime-only** | vue.runtime.js | vue.runtime.common.js | vue.runtime.esm.js |
-| **Full (production)** | vue.min.js | | |
-| **Runtime-only (production)** | vue.runtime.min.js | | |
+| version                       |        UMD         |       CommonJS        |     ES Module      |
+| ----------------------------- | :----------------: | :-------------------: | :----------------: |
+| **Full**                      |       vue.js       |     vue.common.js     |     vue.esm.js     |
+| **Runtime-only**              |   vue.runtime.js   | vue.runtime.common.js | vue.runtime.esm.js |
+| **Full (production)**         |     vue.min.js     |           -           |         -          |
+| **Runtime-only (production)** | vue.runtime.min.js |           -           |         -          |
 
 ### Terms
 
