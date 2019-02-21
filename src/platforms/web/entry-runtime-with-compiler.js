@@ -17,13 +17,14 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
-const mount = Vue.prototype.$mount
+const mount = Vue.prototype.$mount // 缓存了原型上的$mount方法，然后基于compiler版本做了相应修改；原始$mount方法是在./runtime/index.js中定义的
 Vue.prototype.$mount = function(
   el?: string | Element,
   hydrating?: boolean
 ): Component {
-  el = el && query(el)
+  el = el && query(el) // query返回一个dom元素
 
+  // el 不能是body、html元素(因为挂载会替换对应元素)
   /* istanbul ignore if */
   if (el === document.body || el === document.documentElement) {
     process.env.NODE_ENV !== 'production' &&
@@ -40,6 +41,7 @@ Vue.prototype.$mount = function(
     if (template) {
       if (typeof template === 'string') {
         if (template.charAt(0) === '#') {
+          // template是一个id选择器，则取其innerHTML
           template = idToTemplate(template)
           /* istanbul ignore if */
           if (process.env.NODE_ENV !== 'production' && !template) {
@@ -50,6 +52,7 @@ Vue.prototype.$mount = function(
           }
         }
       } else if (template.nodeType) {
+        // template传入的是一个dom对象,取其innerHTML
         template = template.innerHTML
       } else {
         if (process.env.NODE_ENV !== 'production') {
@@ -58,6 +61,7 @@ Vue.prototype.$mount = function(
         return this
       }
     } else if (el) {
+      // 未指定template字段，但el存在，则获取el的outerHTML(innerHTML+el标签自身)
       template = getOuterHTML(el)
     }
     if (template) {
@@ -66,6 +70,7 @@ Vue.prototype.$mount = function(
         mark('compile')
       }
 
+      // 编译，生成render函数
       const { render, staticRenderFns } = compileToFunctions(
         template,
         {
@@ -76,6 +81,8 @@ Vue.prototype.$mount = function(
         },
         this
       )
+
+      // 赋值到options上
       options.render = render
       options.staticRenderFns = staticRenderFns
 
@@ -86,7 +93,8 @@ Vue.prototype.$mount = function(
       }
     }
   }
-  return mount.call(this, el, hydrating)
+
+  return mount.call(this, el, hydrating) // 调用缓存的公共$mount方法
 }
 
 /**
