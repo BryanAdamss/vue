@@ -42,10 +42,14 @@ export function initMixin(Vue: Class<Component>) {
         vm
       )
     }
+
     /* istanbul ignore else */
+    // 定义vm._renderProxy，vm._renderProxy用于vm._render的context
     if (process.env.NODE_ENV !== 'production') {
+      // 开发环境下是一个proxy对象
       initProxy(vm)
     } else {
+      // 生产环境就是vm
       vm._renderProxy = vm
     }
     // expose real self

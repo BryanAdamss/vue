@@ -185,7 +185,7 @@ export function mountComponent(
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
-    // 定义updateComponent函数，内部调用vm._update方法，第一个参数为vm._render返回的一个Vnode
+    // 定义updateComponent函数，内部调用vm._update方法，第一个参数为vm._render返回的一个Vnode；vm._render方法定义在src/instance/render.js中
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }
