@@ -34,23 +34,31 @@ export function toggleObserving (value: boolean) {
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
  */
+// Observer 用于将对象转换成getter/setter形式，并在getter中收集依赖，在setter中通知依赖
 export class Observer {
-  value: any;
-  dep: Dep;
+  value: any; // 待转换的值
+  dep: Dep; // 存放依赖列表
   vmCount: number; // number of vms that has this object as root $data
 
   constructor (value: any) {
     this.value = value
+
     this.dep = new Dep()
+
     this.vmCount = 0
-    def(value, '__ob__', this)
+
+    def(value, '__ob__', this) // 将Observer实例挂载到value上，一用来标识对象是否被Observer过，二可以很方便的在数据上拿到Observer实例，进而拿到Dep实例，这在侦测array的变化时很有用
+
     if (Array.isArray(value)) {
-      const augment = hasProto
-        ? protoAugment
-        : copyAugment
+      // 对于支持__proto__的数组，直接设置__proto__，否则，直接粗暴的拷贝hack过的array 方法到数组实例上
+      const augment = hasProto ? protoAugment : copyAugment
+
       augment(value, arrayMethods, arrayKeys)
+
+      // 将数组内部元素也需要观测
       this.observeArray(value)
     } else {
+      // 对象，则直接递归遍历即可
       this.walk(value)
     }
   }
@@ -106,6 +114,9 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
+// 尝试观测一个数据，并返回一个Observer实例
+// 若已经观测过，则直接返回挂载的__ob__ (Observer实例)
+// 否则，观测这个数据，并返回一个新的Observer实例
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
     return
@@ -196,10 +207,13 @@ export function defineReactive (
  * already exist.
  */
 export function set (target: Array<any> | Object, key: any, val: any): any {
-  if (process.env.NODE_ENV !== 'production' &&
+  if (
+    process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
-    warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
+    warn(
+      `Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`
+    )
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
@@ -212,10 +226,11 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   }
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
-    process.env.NODE_ENV !== 'production' && warn(
-      'Avoid adding reactive properties to a Vue instance or its root $data ' +
-      'at runtime - declare it upfront in the data option.'
-    )
+    process.env.NODE_ENV !== 'production' &&
+      warn(
+        'Avoid adding reactive properties to a Vue instance or its root $data ' +
+          'at runtime - declare it upfront in the data option.'
+      )
     return val
   }
   if (!ob) {
@@ -231,10 +246,13 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
  * Delete a property and trigger change if necessary.
  */
 export function del (target: Array<any> | Object, key: any) {
-  if (process.env.NODE_ENV !== 'production' &&
+  if (
+    process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
-    warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
+    warn(
+      `Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`
+    )
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.splice(key, 1)
@@ -242,10 +260,11 @@ export function del (target: Array<any> | Object, key: any) {
   }
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
-    process.env.NODE_ENV !== 'production' && warn(
-      'Avoid deleting properties on a Vue instance or its root $data ' +
-      '- just set it to null.'
-    )
+    process.env.NODE_ENV !== 'production' &&
+      warn(
+        'Avoid deleting properties on a Vue instance or its root $data ' +
+          '- just set it to null.'
+      )
     return
   }
   if (!hasOwn(target, key)) {
