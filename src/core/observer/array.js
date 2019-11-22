@@ -6,8 +6,9 @@
 import { def } from '../util/index'
 
 const arrayProto = Array.prototype
-export const arrayMethods = Object.create(arrayProto)
+export const arrayMethods = Object.create(arrayProto) // 原型继承,arrayMethods.__proto__===Array.prototype
 
+// 改变数组自身内容的方法都需要拦截
 const methodsToPatch = [
   'push',
   'pop',
@@ -21,11 +22,13 @@ const methodsToPatch = [
 /**
  * Intercept mutating methods and emit events
  */
-methodsToPatch.forEach(function (method) {
+methodsToPatch.forEach(function(method) {
   // cache original method
+  // 缓存原始方法
   const original = arrayProto[method]
-  def(arrayMethods, method, function mutator (...args) {
-    // 执行原始的数组方法
+
+  def(arrayMethods, method, function mutator(...args) {
+    // 调用原始方法，拿到正确结果
     const result = original.apply(this, args)
 
     // 拿到定义在Array实例上的Observer实例
@@ -48,7 +51,7 @@ methodsToPatch.forEach(function (method) {
     // 调用方法时，通知依赖进行更新
     ob.dep.notify()
 
-    // 返回原函数操作结果
+    // 返回原始方法执行结果
     return result
   })
 })
