@@ -80,6 +80,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
+  // this.$forceUpdate实现
   Vue.prototype.$forceUpdate = function() {
     const vm: Component = this
     if (vm._watcher) {
@@ -87,43 +88,66 @@ export function lifecycleMixin(Vue: Class<Component>) {
     }
   }
 
+  // this.$destory实现
   Vue.prototype.$destroy = function() {
     const vm: Component = this
+    // 如果实例正在销毁中，则不重复销毁
     if (vm._isBeingDestroyed) {
       return
     }
+    // 触发beforeDestroy
     callHook(vm, 'beforeDestroy')
+    // 标记正在销毁中
     vm._isBeingDestroyed = true
+
+    // 从父组件中移除当前组件
     // remove self from parent
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
+      // parent.$children数组中保存所有子组件实例
       remove(parent.$children, vm)
     }
+
+    // 从deps中移除当前组件watcher，即当前组件watcher不再监听数据的变化
     // teardown watchers
     if (vm._watcher) {
       vm._watcher.teardown()
     }
+
+    // 从deps中移除用户自定的watcher
     let i = vm._watchers.length
     while (i--) {
       vm._watchers[i].teardown()
     }
+
     // remove reference from data ob
     // frozen object may not have observer.
     if (vm._data.__ob__) {
       vm._data.__ob__.vmCount--
     }
+
+    // 标识实例已经完全被销毁
     // call the last hook...
     vm._isDestroyed = true
+
+    // 解绑所有指令(并不会移除已经渲染到页面上的dom节点)
     // invoke destroy hooks on current rendered tree
     vm.__patch__(vm._vnode, null)
+
+    // 触发destroyed钩子
     // fire destroyed hook
     callHook(vm, 'destroyed')
+
+    // 解绑所有绑定在实例上的自定义事件监听
     // turn off all instance listeners.
     vm.$off()
+
+    // 移除$el上的__vue__引用
     // remove __vue__ reference
     if (vm.$el) {
       vm.$el.__vue__ = null
     }
+
     // release circular reference (#6759)
     if (vm.$vnode) {
       vm.$vnode.parent = null

@@ -53,7 +53,10 @@ export default class Watcher {
     if (isRenderWatcher) {
       vm._watcher = this
     }
+
+    // vm._watchers用来保存用户自定义watcher(options.watcher或者this.$watch生成的)，方便在$destroy中teardown
     vm._watchers.push(this) // 将当前watcher保存到watchers队列中
+
     // options
     if (options) {
       this.deep = !!options.deep
