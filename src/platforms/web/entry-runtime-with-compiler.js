@@ -36,7 +36,9 @@ Vue.prototype.$mount = function(
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // options上没有render，则需要生成render函数
   if (!options.render) {
+    // 获取template
     let template = options.template
     if (template) {
       if (typeof template === 'string') {
@@ -64,6 +66,8 @@ Vue.prototype.$mount = function(
       // 未指定template字段，但el存在，则获取el的outerHTML(innerHTML+el标签自身)
       template = getOuterHTML(el)
     }
+
+    // 将获取到template编译成函数，保存到options上
     if (template) {
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -94,7 +98,8 @@ Vue.prototype.$mount = function(
     }
   }
 
-  return mount.call(this, el, hydrating) // 调用缓存的公共$mount方法
+  // 调用缓存的公共$mount方法
+  return mount.call(this, el, hydrating)
 }
 
 /**

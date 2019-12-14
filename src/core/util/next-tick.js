@@ -108,8 +108,8 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
  * Wrap a function so that if any code inside triggers state change,
  * the changes are queued using a (macro) task instead of a microtask.
  */
-
-// 对外暴露一个函数，在特殊场景下，强制在宏任务队列中执行一些操作
+// 包装一个函数，如果函数内部触发了状态改变，则将改变排在宏任务队列中执行
+// 常用在包裹DOM事件处理函数
 export function withMacroTask(fn: Function): Function {
   return (
     fn._withTask ||

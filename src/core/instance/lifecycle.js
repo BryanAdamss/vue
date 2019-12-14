@@ -161,8 +161,11 @@ export function mountComponent(
   hydrating?: boolean
 ): Component {
   vm.$el = el // 将el保存到$el上
+
+  // 没有render函数，则将render赋值为默认的生成空vnode的函数
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
+
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
       if (
@@ -187,6 +190,7 @@ export function mountComponent(
     }
   }
 
+  // 调用beforeMount钩子
   callHook(vm, 'beforeMount')
 
   let updateComponent
@@ -211,6 +215,7 @@ export function mountComponent(
   } else {
     // 定义updateComponent函数，内部调用vm._update方法，第一个参数为vm._render返回的一个Vnode；vm._render方法定义在src/instance/render.js中
     updateComponent = () => {
+      // _update主要负责patch
       vm._update(vm._render(), hydrating)
     }
   }
@@ -221,16 +226,18 @@ export function mountComponent(
   // 实例化一个渲染watcher，其将立即调用一次updateComponent
   new Watcher(
     vm,
-    updateComponent,
-    noop,
+    updateComponent, // expOrFn
+    noop, // cb
+    // option
     {
       before() {
+        // 已经mount过，则代表触发update
         if (vm._isMounted) {
           callHook(vm, 'beforeUpdate')
         }
       }
     },
-    true /* isRenderWatcher 标识此watcher是一个渲染watcher，见Watcher类*/
+    true /* isRenderWatcher 标识此watcher是一个渲染watcher(观测整个组件的数据状态变化)，见Watcher类*/
   )
   hydrating = false
 

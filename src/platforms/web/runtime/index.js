@@ -39,6 +39,7 @@ Vue.prototype.$mount = function(
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+  // 运行时版本，默认template已经被编译成render函数，直接挂载即可；即无编译过程
   el = el && inBrowser ? query(el) : undefined
   return mountComponent(this, el, hydrating) // 调用lifecycle中的mountComponent
 }
