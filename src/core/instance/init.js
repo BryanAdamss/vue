@@ -13,6 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin(Vue: Class<Component>) {
+
   // 在Vue原型上定义_init方法
   Vue.prototype._init = function(options?: Object) {
     const vm: Component = this
@@ -30,6 +31,7 @@ export function initMixin(Vue: Class<Component>) {
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options;合并options
+    // 如果是组件，则走组件初始化流程
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
@@ -37,7 +39,7 @@ export function initMixin(Vue: Class<Component>) {
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(
-        resolveConstructorOptions(vm.constructor),
+        resolveConstructorOptions(vm.constructor), // 获取实例的选项+父级的选项
         options || {},
         vm
       )
@@ -54,8 +56,9 @@ export function initMixin(Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
+
+    initLifecycle(vm) // 初始化一些实例属性
+    initEvents(vm) // 初始化事件
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props

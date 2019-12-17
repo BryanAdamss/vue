@@ -21,20 +21,26 @@ import {
 export let activeInstance: any = null
 export let isUpdatingChildComponent: boolean = false
 
+// 初始化生命周期(初始化一些实例属性)
 export function initLifecycle(vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+  // 找出第一个非抽象父类
   let parent = options.parent
-  if (parent && !options.abstract) {
-    while (parent.$options.abstract && parent.$parent) {
+  if (parent && !options.abstract) { // 当前组件不是抽象类，并且父类存在
+    while (parent.$options.abstract && parent.$parent) {// 父类是抽象类 且 父类的父类存在
       parent = parent.$parent
     }
+    // 将当前实例添加到首个非抽象父类的$children；注意每个组件都会走initeLifecycle，所以，所有组件的$children，都是其子组件主动push到当前组件的$children中的
     parent.$children.push(vm)
   }
 
+  // 初始化一些实例属性
   vm.$parent = parent
-  vm.$root = parent ? parent.$root : vm
+  // 当前组件没有父组件，则其本身就是当前组件树的根组件；否则找到parent.$root；
+  // parent.$root也是使用同样逻辑查找$root的；所以最终就找到根组件了了
+  vm.$root = parent ? parent.$root : vm 
 
   vm.$children = []
   vm.$refs = {}
@@ -358,19 +364,25 @@ export function deactivateChildComponent(vm: Component, direct?: boolean) {
   }
 }
 
+// 触发生命周期钩子用(hook可为created、mounted等)
 export function callHook(vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
+  // 取出对应生命周期钩子的handler函数
   const handlers = vm.$options[hook]
   if (handlers) {
+    // 因为可能存在mixin混入的钩子，所以handler可能有多个
     for (let i = 0, j = handlers.length; i < j; i++) {
+      // 依次调用handler
       try {
         handlers[i].call(vm)
       } catch (e) {
-        handleError(e, vm, `${hook} hook`)
+        handleError(e, vm, `${hook} hook`) // 内部会执行父组件的errorCaptured钩子函数与全局的config.errorHandler
       }
     }
   }
+
+// 存在hook:开头的钩子(hook:beforeDestroy)，主动派发
   if (vm._hasHookEvent) {
     vm.$emit('hook:' + hook)
   }
