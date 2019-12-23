@@ -9,12 +9,19 @@ import {
 } from '../util/index'
 import { updateListeners } from '../vdom/helpers/index'
 
+// 初始化事件
+// 将父组件在模板中使用v-on注册的事件添加到子组件的事件系统中
 export function initEvents (vm: Component) {
+
   vm._events = Object.create(null)
   vm._hasHookEvent = false
+
   // init parent attached events
-  const listeners = vm.$options._parentListeners
+  // 拿到父组件在子组件上注册的事件；
+  // _parentListeners的值是在将编译阶段(代码字符串转成渲染函数时，父组件传入的，所以能在子组件中取到在父组件注册到子组件身上的事件)
+  const listeners = vm.$options._parentListeners 
   if (listeners) {
+    // 将父组件向子组件注册的事件注册到子组件实例上
     updateComponentListeners(vm, listeners)
   }
 }
