@@ -16,9 +16,9 @@ type PropOptions = {
   default: any,
   required: ?boolean,
   validator: ?Function
-};
+}
 
-export function validateProp (
+export function validateProp(
   key: string,
   propOptions: Object,
   propsData: Object,
@@ -42,6 +42,7 @@ export function validateProp (
     }
   }
   // check default value
+  // 只有在value为undefined时，default值才会生效（null时，default值不会生效）
   if (value === undefined) {
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
@@ -54,7 +55,7 @@ export function validateProp (
   if (
     process.env.NODE_ENV !== 'production' &&
     // skip validation for weex recycle-list child component props
-    !(__WEEX__ && isObject(value) && ('@binding' in value))
+    !(__WEEX__ && isObject(value) && '@binding' in value)
   ) {
     assertProp(prop, key, value, vm, absent)
   }
@@ -64,7 +65,11 @@ export function validateProp (
 /**
  * Get the default value of a prop.
  */
-function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
+function getPropDefaultValue(
+  vm: ?Component,
+  prop: PropOptions,
+  key: string
+): any {
   // no default, return undefined
   if (!hasOwn(prop, 'default')) {
     return undefined
@@ -73,15 +78,19 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
   // warn against non-factory defaults for Object & Array
   if (process.env.NODE_ENV !== 'production' && isObject(def)) {
     warn(
-      'Invalid default value for prop "' + key + '": ' +
-      'Props with type Object/Array must use a factory function ' +
-      'to return the default value.',
+      'Invalid default value for prop "' +
+        key +
+        '": ' +
+        'Props with type Object/Array must use a factory function ' +
+        'to return the default value.',
       vm
     )
   }
   // the raw prop value was also undefined from previous render,
   // return previous default value to avoid unnecessary watcher trigger
-  if (vm && vm.$options.propsData &&
+  if (
+    vm &&
+    vm.$options.propsData &&
     vm.$options.propsData[key] === undefined &&
     vm._props[key] !== undefined
   ) {
@@ -97,7 +106,7 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
 /**
  * Assert whether a prop is valid.
  */
-function assertProp (
+function assertProp(
   prop: PropOptions,
   name: string,
   value: any,
@@ -105,15 +114,18 @@ function assertProp (
   absent: boolean
 ) {
   if (prop.required && absent) {
-    warn(
-      'Missing required prop: "' + name + '"',
-      vm
-    )
+    warn('Missing required prop: "' + name + '"', vm)
     return
   }
+  // 在prop不是必填项的情况下，null、undefinged是可以通过任何类型(基础type的检查、validator)检查的
+  // 即prop是必填项时，null、undefined需要参与类型检查
+  // https://juejin.im/post/5ddcf5f4e51d4532db416149
+  // https://github.com/vuejs/vue/issues/6768#issuecomment-335527318
   if (value == null && !prop.required) {
     return
   }
+
+  // 检查type
   let type = prop.type
   let valid = !type || type === true
   const expectedTypes = []
@@ -129,12 +141,11 @@ function assertProp (
   }
 
   if (!valid) {
-    warn(
-      getInvalidTypeMessage(name, value, expectedTypes),
-      vm
-    )
+    warn(getInvalidTypeMessage(name, value, expectedTypes), vm)
     return
   }
+
+  // 检查自定义validator(同时指定了type和validator，两个都会检查，先type后validator)
   const validator = prop.validator
   if (validator) {
     if (!validator(value)) {
@@ -148,9 +159,12 @@ function assertProp (
 
 const simpleCheckRE = /^(String|Number|Boolean|Function|Symbol)$/
 
-function assertType (value: any, type: Function): {
-  valid: boolean;
-  expectedType: string;
+function assertType(
+  value: any,
+  type: Function
+): {
+  valid: boolean,
+  expectedType: string
 } {
   let valid
   const expectedType = getType(type)
@@ -179,16 +193,16 @@ function assertType (value: any, type: Function): {
  * because a simple equality check will fail when running
  * across different vms / iframes.
  */
-function getType (fn) {
+function getType(fn) {
   const match = fn && fn.toString().match(/^\s*function (\w+)/)
   return match ? match[1] : ''
 }
 
-function isSameType (a, b) {
+function isSameType(a, b) {
   return getType(a) === getType(b)
 }
 
-function getTypeIndex (type, expectedTypes): number {
+function getTypeIndex(type, expectedTypes): number {
   if (!Array.isArray(expectedTypes)) {
     return isSameType(expectedTypes, type) ? 0 : -1
   }
@@ -200,17 +214,20 @@ function getTypeIndex (type, expectedTypes): number {
   return -1
 }
 
-function getInvalidTypeMessage (name, value, expectedTypes) {
-  let message = `Invalid prop: type check failed for prop "${name}".` +
+function getInvalidTypeMessage(name, value, expectedTypes) {
+  let message =
+    `Invalid prop: type check failed for prop "${name}".` +
     ` Expected ${expectedTypes.map(capitalize).join(', ')}`
   const expectedType = expectedTypes[0]
   const receivedType = toRawType(value)
   const expectedValue = styleValue(value, expectedType)
   const receivedValue = styleValue(value, receivedType)
   // check if we need to specify expected value
-  if (expectedTypes.length === 1 &&
-      isExplicable(expectedType) &&
-      !isBoolean(expectedType, receivedType)) {
+  if (
+    expectedTypes.length === 1 &&
+    isExplicable(expectedType) &&
+    !isBoolean(expectedType, receivedType)
+  ) {
     message += ` with value ${expectedValue}`
   }
   message += `, got ${receivedType} `
@@ -221,7 +238,7 @@ function getInvalidTypeMessage (name, value, expectedTypes) {
   return message
 }
 
-function styleValue (value, type) {
+function styleValue(value, type) {
   if (type === 'String') {
     return `"${value}"`
   } else if (type === 'Number') {
@@ -231,11 +248,11 @@ function styleValue (value, type) {
   }
 }
 
-function isExplicable (value) {
+function isExplicable(value) {
   const explicitTypes = ['string', 'number', 'boolean']
   return explicitTypes.some(elem => value.toLowerCase() === elem)
 }
 
-function isBoolean (...args) {
+function isBoolean(...args) {
   return args.some(elem => elem.toLowerCase() === 'boolean')
 }
